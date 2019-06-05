@@ -49,7 +49,7 @@ def verify_patchelf():
 
 
 def repair_wheel(wheel_path: str, abi: str, lib_sdir: str, out_dir: str,
-                 update_tags: bool) -> Optional[str]:
+                 update_tags: bool, strip: bool = False) -> Optional[str]:
 
     external_refs_by_fn = get_wheel_elfdata(wheel_path)[1]
 
@@ -104,7 +104,19 @@ def repair_wheel(wheel_path: str, abi: str, lib_sdir: str, out_dir: str,
         if update_tags:
             ctx.out_wheel = add_platforms(ctx, [abi],
                                           get_replace_platforms(abi))
+
+        if strip:
+            ext_libs = [path for (_, path) in soname_map.values()]
+            extensions = external_refs_by_fn.keys()
+            strip_symbols(itertools.chain(ext_libs, extensions))
+
     return ctx.out_wheel
+
+
+def strip_symbols(libraries):
+    for lib in libraries:
+        logger.info('Stripping symbols from %s', lib)
+        check_call(['strip', '-s', lib])
 
 
 def copylib(src_path, dest_dir):
