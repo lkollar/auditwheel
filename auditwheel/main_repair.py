@@ -43,8 +43,14 @@ def configure_parser(sub_parsers):
     p.add_argument('--strip',
                    dest='STRIP',
                    action='store_true',
-                   help='Strip symbols in the resulting wheel',
+                   help='Strip symbols in the resulting wheel.',
                    default=False)
+    p.add_argument('--strip-args',
+                   dest='STRIP_ARGS',
+                   action="append",
+                   help='Extra arguments to pass to the strip binary. Only valid when '
+                        '--strip is set.',
+                   default=["-s"])
     p.set_defaults(func=execute)
 
 
@@ -81,12 +87,16 @@ def execute(args, p):
                (args.WHEEL_FILE, args.PLAT))
         p.error(msg)
 
+    if args.STRIP_ARGS and not args.STRIP:
+        p.error("--strip-args is only valid with --strip.")
+
     out_wheel = repair_wheel(args.WHEEL_FILE,
                              abi=args.PLAT,
                              lib_sdir=args.LIB_SDIR,
                              out_dir=args.WHEEL_DIR,
                              update_tags=args.UPDATE_TAGS,
-                             strip=args.STRIP)
+                             strip=args.STRIP,
+                             strip_args=args.STRIP_ARGS)
 
     if out_wheel is not None:
         analyzed_tag = analyze_wheel_abi(out_wheel).overall_tag

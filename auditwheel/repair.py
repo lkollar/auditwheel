@@ -7,7 +7,7 @@ from os.path import exists, relpath, dirname, basename, abspath, isabs
 from os.path import join as pjoin
 from subprocess import check_call, check_output, CalledProcessError
 from distutils.spawn import find_executable
-from typing import Dict, Optional
+from typing import Dict, Optional, Iterable
 import logging
 
 from .policy import get_replace_platforms
@@ -42,7 +42,8 @@ def verify_patchelf():
 
 
 def repair_wheel(wheel_path: str, abi: str, lib_sdir: str, out_dir: str,
-                 update_tags: bool, strip: bool = False) -> Optional[str]:
+                 update_tags: bool, strip: bool = False,
+                 strip_args: Iterable[str] = None) -> Optional[str]:
 
     external_refs_by_fn = get_wheel_elfdata(wheel_path)[1]
 
@@ -109,17 +110,20 @@ def repair_wheel(wheel_path: str, abi: str, lib_sdir: str, out_dir: str,
                                           get_replace_platforms(abi))
 
         if strip:
-            ext_libs = [path for (_, path) in soname_map.values()]
+            libs = [path for (_, path) in soname_map.values()]
             extensions = external_refs_by_fn.keys()
-            strip_symbols(itertools.chain(ext_libs, extensions))
+            strip_symbols(itertools.chain(libs, extensions), strip_args)
 
     return ctx.out_wheel
 
 
-def strip_symbols(libraries):
+def strip_symbols(libraries: Iterable[str],
+                  args: Optional[Iterable[str]] = None) -> None:
+    if args is None:
+        args = []
     for lib in libraries:
         logger.info('Stripping symbols from %s', lib)
-        check_call(['strip', '-s', lib])
+        check_call(['strip'] + args + [lib])
 
 
 def copylib(src_path, dest_dir):
