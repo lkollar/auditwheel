@@ -10,7 +10,7 @@ from . import main_lddtree
 from . import main_repair
 
 
-def main():
+def main(argv):
     if sys.platform != 'linux':
         print('Error: This tool only supports Linux')
         return 1
@@ -20,7 +20,7 @@ def main():
         dist.version, dist.location, *sys.version_info)
 
     p = argparse.ArgumentParser(description='Cross-distro Python wheels.')
-    p.set_defaults(prog=os.path.basename(sys.argv[0]))
+    p.set_defaults(prog=os.path.basename(argv[0]))
     p.add_argument('-V', '--version', action='version', version=version)
     p.add_argument("-v",
                    "--verbose",
@@ -35,7 +35,7 @@ def main():
     main_repair.configure_parser(sub_parsers)
     main_lddtree.configure_subparser(sub_parsers)
 
-    args = p.parse_args()
+    args = p.parse_args(args=argv[1:])
 
     logging.disable(logging.NOTSET)
     if args.verbose >= 1:
