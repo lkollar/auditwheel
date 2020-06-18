@@ -1,14 +1,19 @@
 import argparse
 import os
 import shutil
+from collections import Set
 from glob import glob
 from os.path import exists, isdir
 from os.path import join as pjoin
 import zipfile
 import subprocess
+from typing import Sequence, Any, TypeVar, Optional, Union
+
+T = TypeVar("T")
 
 
 def unique_by_index(sequence):
+    # type: (Sequence[T]) -> Sequence[T]
     """ unique elements in `sequence` in the order in which they occur
 
     Parameters
@@ -29,6 +34,7 @@ def unique_by_index(sequence):
 
 
 def zip2dir(zip_fname, out_dir):
+    # type: (str, str) -> None
     """ Extract `zip_fname` into output directory `out_dir`
 
     Parameters
@@ -54,6 +60,7 @@ def zip2dir(zip_fname, out_dir):
 
 
 def dir2zip(in_dir, zip_fname):
+    # type: (str, str) -> None
     """ Make a zip file `zip_fname` with contents of directory `in_dir`
 
     The recorded filenames are relative to `in_dir`, so doing a standard zip
@@ -77,12 +84,14 @@ def dir2zip(in_dir, zip_fname):
 
 
 def tarbz2todir(tarbz2_fname, out_dir):
+    # type: (str, str) -> None
     """Extract `tarbz2_fname` into output directory `out_dir`
     """
     subprocess.check_output(['tar', 'xjf', tarbz2_fname, '-C', out_dir])
 
 
 def find_package_dirs(root_path):
+    # type: (str) -> Set[str]
     """Find python package directories in directory `root_path`
 
     Parameters
@@ -108,6 +117,7 @@ class EnvironmentDefault(argparse.Action):
     """Get values from environment variable."""
 
     def __init__(self, env, required=True, default=None, **kwargs):
+        # type: (str, bool, Optional[str], Any) -> None
         self.env_default = os.environ.get(env)
         self.env = env
         if self.env_default:
@@ -132,4 +142,5 @@ class EnvironmentDefault(argparse.Action):
         )
 
     def __call__(self, parser, namespace, values, option_string=None):
+        # type: (argparse.ArgumentParser, argparse.Namespace, Union[str, Sequence[Any], None], Optional[str]) -> None
         setattr(namespace, self.dest, values)
