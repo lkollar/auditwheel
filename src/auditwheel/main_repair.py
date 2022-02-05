@@ -86,6 +86,14 @@ below.
         default=False,
     )
     p.add_argument(
+        "--exclude",
+        dest="EXCLUDE",
+        help="Exclude SONAME from grafting into the resulting wheel "
+        "(can be specified multiple times)",
+        action="append",
+        default=[],
+    )
+    p.add_argument(
         "--only-plat",
         dest="ONLY_PLAT",
         action="store_true",
@@ -166,6 +174,7 @@ def execute(args, p):
         update_tags=args.UPDATE_TAGS,
         patcher=patcher,
         strip=args.STRIP,
+        exclude=args.EXCLUDE,
     )
 
     if out_wheel is not None:
