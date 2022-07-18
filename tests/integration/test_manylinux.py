@@ -307,6 +307,31 @@ class Anylinux:
         # at once in the same Python program:
         docker_exec(docker_python, ["python", "-c", "'import numpy; import foo'"])
 
+    def test_repair_exclude(self, any_manylinux_container, docker_python, io_folder):
+        """Test the --exclude argument to avoid grafting certain libraries."""
+        policy, tag, manylinux_ctr = any_manylinux_container
+
+        orig_wheel = build_numpy(manylinux_ctr, policy, io_folder)
+        assert orig_wheel == ORIGINAL_NUMPY_WHEEL
+        assert "manylinux" not in orig_wheel
+
+        # Exclude libatlas from grafting into the wheel
+        output = docker_exec(
+            manylinux_ctr,
+            f"auditwheel repair --plat {policy} "
+            "--exclude libatlas.so.3 --only-plat -w /io /io/{orig_wheel}",
+        )
+
+        assert "Excluding libatlas.so.3" in output
+        filenames = os.listdir(io_folder)
+        assert len(filenames) == 2
+        repaired_wheel = f"numpy-{NUMPY_VERSION}-{PYTHON_ABI}-{tag}.whl"
+        assert repaired_wheel in filenames
+
+        # Make sure we don't have libatlas in the result
+        contents = zipfile.ZipFile(os.path.join(io_folder, repaired_wheel)).namelist()
+        assert not any(x for x in contents if x.startswith("libatlas"))
+
     def test_build_wheel_with_binary_executable(
         self, any_manylinux_container, docker_python, io_folder
     ):
