@@ -7,9 +7,8 @@ from os.path import abspath, basename, exists, isfile
 from auditwheel.patcher import Patchelf
 
 from .policy import (
-    POLICY_PRIORITY_HIGHEST,
+    CURRENT_PLATFORM_POLICY,
     get_policy_by_name,
-    get_policy_name,
     get_priority_by_name,
     load_policies,
 )
@@ -32,7 +31,6 @@ below.
         if len(p["aliases"]) > 0:
             epilog += f" (aliased by {', '.join(p['aliases'])})"
         epilog += "\n"
-    highest_policy = get_policy_name(POLICY_PRIORITY_HIGHEST)
     help = """Vendor in external shared library dependencies of a wheel.
 If multiple wheels are specified, an error processing one
 wheel will abort processing of subsequent wheels.
@@ -52,9 +50,9 @@ wheel will abort processing of subsequent wheels.
         env="AUDITWHEEL_PLAT",
         dest="PLAT",
         help="Desired target platform. See the available platforms under the "
-        f'PLATFORMS section below. (default: "{highest_policy}")',
+        f'PLATFORMS section below. (default: "{CURRENT_PLATFORM_POLICY}")',
         choices=policy_names,
-        default=highest_policy,
+        default=CURRENT_PLATFORM_POLICY,
     )
     p.add_argument(
         "-L",

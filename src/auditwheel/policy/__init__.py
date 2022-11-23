@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import platform as _platform_module
 import sys
 from collections import defaultdict
@@ -175,6 +176,29 @@ def get_replace_platforms(name: str) -> list[str]:
     if name.startswith("musllinux_"):
         return ["linux_" + "_".join(name.split("_")[3:])]
     return ["linux_" + "_".join(name.split("_")[1:])]
+
+
+def _get_glibc_version():
+    try:
+        _, version = os.confstr("CS_GNU_LIBC_VERSION").split()
+    except (AttributeError, OSError, ValueError):
+        return None
+    return version
+
+
+def _find_policy_for_glibc(glibc_version):
+    policies = _POLICIES
+    for policy in policies:
+        try:
+            glibc_versions = policy["symbol_versions"]["GLIBC"]
+        except KeyError:
+            continue
+
+        if glibc_version in glibc_versions:
+            return policy["name"]
+
+
+CURRENT_PLATFORM_POLICY = _find_policy_for_glibc(_get_glibc_version())
 
 
 # These have to be imported here to avoid a circular import.
